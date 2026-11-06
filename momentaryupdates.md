@@ -43,3 +43,9 @@
 "Please check user interface of remote controller. Because it's Its UI is somehow uh wrong at the top."
 
 "Feel free now to disable ADB tailscale on any device. Just disable it. Or uh close it."
+
+## 10 · 6.11.2026, the helper shows the deck like the phone; two screens
+
+"Uh I activate uh Which your camera on OBS or can watch OBS if it's really switching, but looks like it's really switching."
+
+"NOW FIX BOTTOM PF HELPER ONS IS ONN SECOND SCREEN PLEAASE WRITE IN MANIFEST DTAAT My computer has two screens, you always need to check both.Actually the the Stream Deck cannot switch the profiles but I can switch it through the app on the phone or through the app on my Meck. So if I open stream remote. I want to have the same view. Is on my phone. Plus all other technical details below it. So I can also switch the profiles On the computer and it will be switched on my stream deck."
