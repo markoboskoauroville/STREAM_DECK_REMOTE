@@ -43,7 +43,7 @@ final class Model: ObservableObject {
 
     func refresh() {
         obsLine = obs.summary
-        serverLine = server.state
+        serverLine = server.status
         cable = cableLink.phones
         addresses = Model.ipv4()
         deckLine = engine.deckStatus

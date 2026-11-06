@@ -20,23 +20,23 @@ final class Server {
     private var listener: NWListener?
     private(set) var version = 1
     private var waiting: [(c: NWConnection, after: Int)] = []
-    private(set) var state = "starting"
+    private(set) var status = "starting"
     let name = Host.current().localizedName ?? "Mac"
 
     init(engine: Engine) { self.engine = engine }
 
     func start() {
         guard listener == nil, let port = NWEndpoint.Port(rawValue: PORT),
-              let l = try? NWListener(using: .tcp, on: port) else { state = "port \(PORT) is taken"; return }
+              let l = try? NWListener(using: .tcp, on: port) else { status = "port \(PORT) is taken"; return }
         l.service = NWListener.Service(name: name, type: "_mantradeck._tcp")
         l.newConnectionHandler = { [weak self] c in self?.serve(c) }
         l.stateUpdateHandler = { [weak self] st in
             switch st {
             case .ready:
-                self?.state = "listening on \(PORT)"
+                self?.status = "listening on \(PORT)"
                 Ports.record("streamdeck-remote", PORT, udp: false, health: "/hello")
             case .failed(let e):
-                self?.state = "failed: \(e)"
+                self?.status = "failed: \(e)"
                 self?.listener = nil
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) { self?.start() }
             default: break
