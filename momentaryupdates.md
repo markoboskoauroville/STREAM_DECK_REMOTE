@@ -7,3 +7,7 @@
 ## 2 · 6.11.2026
 
 "Please also. Uh write takeover document soon. After every major step, write automatically take over document. Don't wait for closing of the session. Just right take over as we go."
+
+## 3 · 6.11.2026, one network: the real deck and the phone mirror each other
+
+"So to make it clear, actually this application controls both Stream Deck and Stream Deck. A. P. K. And if something is clicked on the Stream Deck APK, I can see it on original Stream Deck and vice versa. And clicking has two states, so when I press button, the button and large for certain percentage and then come back indicating that it was pressed. So if I create if you create a profile for anything I ask you for example, OBS or switching applications, it's available on both devices in my APK in in real stream deck and they reflect each other's actions. If I press on the Stream Deck one button and it enlarges, it does the same on the phone. So everything is connected in one network. Yeah."
