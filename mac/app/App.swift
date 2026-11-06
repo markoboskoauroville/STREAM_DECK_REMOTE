@@ -1,0 +1,155 @@
+// Stream Deck Remote (Mantra): the Mac's half of Stream Deck Remote on the phone (Marko, 6.11.2026: "this is Android
+// application, which looks like a stream deck ... and can be controlled by helper application you're going to build
+// ... If we can avoid ADB even better ... if they're on the same Wi-Fi network. That should work."). It serves the
+// phone's profiles, APPS (the application switcher) and OBS (one numbered key per scene), on port 8963.
+import AppKit
+import SwiftUI
+
+let VERSION = 1
+let NAME = "Stream Deck Remote (Mantra)"
+
+final class Model: ObservableObject {
+    @Published var lastPhone = "no phone yet"
+    @Published var lastSeen: Date?
+    @Published var cable: [String] = []
+    @Published var obsLine = ""
+    @Published var serverLine = ""
+    @Published var addresses: [String] = []
+
+    let apps = Apps()
+    let obs = OBS()
+    let cableLink = Cable()
+    lazy var server = Server(apps: apps, obs: obs)
+
+    func start() {
+        apps.onChange = { [weak self] in self?.server.changed() }
+        obs.onChange = { [weak self] in self?.server.changed(); self?.refresh() }
+        cableLink.onChange = { [weak self] in self?.refresh() }
+        server.onSeen = { [weak self] who in
+            guard let self = self else { return }
+            self.lastPhone = who; self.lastSeen = Date()
+        }
+        apps.start()
+        obs.start()
+        server.start()
+        cableLink.start()
+        Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in self?.refresh() }
+        refresh()
+    }
+
+    func refresh() {
+        obsLine = obs.summary
+        serverLine = server.state
+        cable = cableLink.phones
+        addresses = Model.ipv4()
+    }
+
+    /// This Mac's addresses a phone can type (Wi-Fi, cable, Tailscale), without the loopback.
+    static func ipv4() -> [String] {
+        var out: [String] = []
+        var ifa: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifa) == 0, let first = ifa else { return out }
+        defer { freeifaddrs(ifa) }
+        for p in sequence(first: first, next: { $0.pointee.ifa_next }) {
+            guard let sa = p.pointee.ifa_addr, sa.pointee.sa_family == UInt8(AF_INET) else { continue }
+            let name = String(cString: p.pointee.ifa_name)
+            guard name != "lo0" else { continue }
+            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            if getnameinfo(sa, socklen_t(sa.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
+                let ip = String(cString: host)
+                if !ip.hasPrefix("169.254.") && !ip.hasPrefix("198.18.") { out.append("\(ip)  (\(name))") }
+            }
+        }
+        return out
+    }
+}
+
+struct Panel: View {
+    @ObservedObject var m: Model
+    let close: () -> Void
+
+    private let green = Color(red: 0x33 / 255.0, green: 0xD1 / 255.0, blue: 0x7A / 255.0)
+    private let grey = Color(white: 0.55)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Button { } label: { Text("ON").font(.system(size: 13, weight: .bold)).foregroundColor(green) }
+                    .buttonStyle(.plain).accessibilityIdentifier("on")
+                Button { m.server.stop(); NSApp.terminate(nil) } label: {
+                    Text("OFF").font(.system(size: 13, weight: .bold)).foregroundColor(grey)
+                }.buttonStyle(.plain).accessibilityIdentifier("off")
+                Text(NAME).font(.system(size: 13, weight: .semibold))
+                Spacer()
+                Button(action: close) {
+                    Image(systemName: "xmark").foregroundColor(grey).frame(width: 28, height: 28).contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityIdentifier("close")
+            }
+            Divider()
+            section("THE PHONE") {
+                line("Stream Deck Remote on the phone finds this Mac by itself on the same Wi-Fi, or over the cable.")
+                line("Last asked by: \(m.lastPhone)" + (m.lastSeen.map { " · \(Int(-$0.timeIntervalSinceNow)) s ago" } ?? ""))
+                line("Server: \(m.serverLine)")
+            }
+            section("THIS MAC'S ADDRESSES (port \(PORT))") {
+                ForEach(m.addresses, id: \.self) { a in line(a).textSelection(.enabled) }
+            }
+            section("CABLE / ADB") {
+                line(m.cable.isEmpty ? "no phone on adb (not needed on Wi-Fi)" : m.cable.joined(separator: ", ") + " · adb reverse on")
+            }
+            section("PROFILES") {
+                line("APPS · application switcher")
+                line("OBS · \(m.obsLine)")
+            }
+            Spacer(minLength: 0)
+            Text("v\(VERSION)").font(.system(size: 11)).foregroundColor(grey)
+        }
+        .padding(16)
+        .frame(minWidth: 340, minHeight: 380)
+    }
+
+    @ViewBuilder private func section<C: View>(_ title: String, @ViewBuilder _ c: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.system(size: 11, weight: .bold)).foregroundColor(grey)
+            c()
+        }
+    }
+
+    private func line(_ t: String) -> some View {
+        Text(t).font(.system(size: 12)).fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    let model = Model()
+    var window: NSWindow!
+
+    func applicationDidFinishLaunching(_ n: Notification) {
+        model.start()
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 380, height: 440),
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        window.title = NAME
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: Panel(m: model) { [weak self] in self?.window.orderOut(nil) })
+        window.center()
+        if !CommandLine.arguments.contains("--login") { window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ s: NSApplication) -> Bool { false }
+
+    func applicationShouldHandleReopen(_ s: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        window.makeKeyAndOrderFront(nil)
+        return true
+    }
+}
+
+@main
+struct Main {
+    static func main() {
+        let app = NSApplication.shared
+        let d = AppDelegate()
+        app.delegate = d
+        app.setActivationPolicy(.regular)
+        app.run()
+    }
+}

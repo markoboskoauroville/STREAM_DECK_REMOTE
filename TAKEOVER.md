@@ -3,10 +3,14 @@
 Written as we go, after every major step (Marko, 6.11.2026: "After every major step, write automatically take over
 document. Don't wait for closing of the session.").
 
-## Where it stands (6.11.2026, step 1: the repository)
+## Where it stands (6.11.2026, step 2: v1 written, pushed for GitHub to build)
 
-- Repository made, requests saved word for word in momentaryupdates.md.
-- Next: the Android app (android/) and the Mac helper (mac/), both built by GitHub Actions only.
+- Step 1: repository made, requests saved word for word in momentaryupdates.md.
+- Step 2: Android app v1 (android/, Link.kt = finding the Mac + long poll, MainActivity.kt = the deck and the tabs)
+  and Mac helper v1 (mac/app: App.swift window, Server.swift HTTP + Bonjour + adb reverse, Apps.swift switcher,
+  OBS.swift obs-websocket). Both workflows in .github/workflows; keystore secret set from ~/.android/debug.keystore.
+- Next: both workflow runs green → install the Mac app from release mac-v1 → APK v1 on the Pixel 7 emulator →
+  screenshots of APPS and OBS → Marko on his phone (Local Network permission is his click on the Mac).
 
 ## The plan
 
