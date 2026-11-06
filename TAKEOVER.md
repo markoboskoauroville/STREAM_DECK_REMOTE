@@ -3,16 +3,23 @@
 Written as we go, after every major step (Marko, 6.11.2026: "After every major step, write automatically take over
 document. Don't wait for closing of the session.").
 
-## Where it stands (6.11.2026, step 3: one engine for the real deck and the phone, v2)
+## Where it stands (6.11.2026 ~20:40, step 4: tested on the real deck and the real Pixel 7; Mac v5, APK v2)
 
-- Step 1: repository, requests word for word (momentaryupdates.md).
-- Step 2: v1 built green by GitHub (APK release v1, Mac release mac-v1): phone deck with APPS/OBS tabs + Mac helper.
-- Step 3 (request 3, "they reflect each other's actions"): the Mac helper now also drives the real Elgato deck over
-  USB (Deck.swift from STREAM_DECK_CONTROL, plus MK.2 / original v2 support because a new deck is coming). One
-  Engine (mac/app/Engine.swift) holds the profile and the 15 keys; both faces show it, both press it; a press
-  enlarges the key to 118 % on both, then acts. Phone tabs switch the profile of both. APPS layout = Stream Deck
-  Control v3 (apps 1–12, NEXT, F1, F2). The helper quits Stream Deck Control (Mantra) at start (one holder of the deck).
-- Next: v2 green → install mac-v2 → APK v2 on the Pixel 7 emulator → screenshots → Marko plugs in the deck.
+- Installed: /Applications/Stream Deck Remote (Mantra).app **v5** (release mac-v5, signed "Mantra Apps"), APK **v2** on
+  the Pixel 7 (41241FDH2S10SJ, release v2).
+- Verified: the phone finds the Mac over the cable (adb reverse set by the helper) and shows APPS (apps 1-12, NEXT,
+  F1, F2, the same as the real deck); a tap on the OBS tab switched BOTH faces to OBS; OBS's 3 scenes are keys 1-3,
+  top scene = 1 (Marko: "What is at the top is one, middle is two"); a tap on key 2 made scene 2 OBS's live output
+  (green on phone and deck). Marko swapped scenes himself after; the keys followed.
+- The real deck (original 15-key, 0x0060, serial AL21I1C06271) has a **broken display** (Marko 6.11.2026): pictures look
+  torn and black keys look blue. Judge it only roughly. Photographed through the Pixel's back camera
+  (scratchpad deckshot.sh: scrcpy camera 2 s, last frame, clip deleted).
+- Driver lessons v3-v5: the 7749-byte first page is right for this deck (8175 left keys empty); the reset command
+  before each redraw is gone; a refused picture no longer causes a redraw loop.
+- Stream Deck Control (Mantra) **removed** (Marko: "Delete one app so we have only one"): app deleted, star row and
+  icon replaced by this app, repo stream-deck-control archived with an "obsolete" line.
+- Not yet tested: same-Wi-Fi without the cable (needs Marko's one click: allow Local Network for the helper if macOS
+  asks), the press-enlarge seen by eye on both (160 ms), the MK.2 path (no MK.2 here yet).
 - Open question for Marko: how to switch profile on the real deck alone (it has no tabs).
 
 ## The plan
