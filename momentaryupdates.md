@@ -33,3 +33,7 @@
 "You need to make both icons APK and the The one for the macouest."
 
 "Background is too light, just make it darker for icon so it doesn't. Draw too much attention."
+
+## 8 · 6.11.2026, the Wi-Fi path
+
+"And now test Wi-Fi path."

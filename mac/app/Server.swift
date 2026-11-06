@@ -130,6 +130,15 @@ final class Cable {
     private let adb = NSHomeDirectory() + "/Library/Android/sdk/platform-tools/adb"
     private(set) var phones: [String] = []
     var onChange: () -> Void = {}
+    /// The cable (adb reverse) is optional: with it off the phone uses the Wi-Fi only (Marko, 6.11.2026: "If we can
+    /// avoid ADB even better"). Saved; on by default.
+    var enabled = UserDefaults.standard.object(forKey: "cable") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(enabled, forKey: "cable")
+            if !enabled { DispatchQueue.global().async { for s in self.serials() { _ = self.run(["-s", s, "reverse", "--remove", "tcp:\(PORT)"]) } } }
+            DispatchQueue.main.async { self.phones = []; self.onChange() }
+        }
+    }
 
     func start() {
         Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.tick() }
@@ -145,12 +154,16 @@ final class Cable {
         return String(data: d, encoding: .utf8) ?? ""
     }
 
+    private func serials() -> [String] {
+        run(["devices"]).split(separator: "\n").dropFirst().compactMap { l -> String? in
+            let f = l.split(separator: "\t"); return f.count == 2 && f[1] == "device" ? String(f[0]) : nil
+        }
+    }
+
     private func tick() {
-        guard FileManager.default.isExecutableFile(atPath: adb) else { return }
+        guard enabled, FileManager.default.isExecutableFile(atPath: adb) else { return }
         DispatchQueue.global().async {
-            let serials = self.run(["devices"]).split(separator: "\n").dropFirst().compactMap { l -> String? in
-                let f = l.split(separator: "\t"); return f.count == 2 && f[1] == "device" ? String(f[0]) : nil
-            }
+            let serials = self.serials()
             var names: [String] = []
             for s in serials {
                 if !self.run(["-s", s, "reverse", "--list"]).contains("tcp:\(PORT)") {

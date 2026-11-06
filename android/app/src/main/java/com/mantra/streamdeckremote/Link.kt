@@ -126,6 +126,9 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
         val tries = mutableListOf<Pair<String, String>>()
         tries += "http://127.0.0.1:$PORT" to "cable"
         prefs.getString("last", null)?.let { tries += it to "Wi-Fi" }
+        // Bonjour needs a moment after the app starts: the local network is given up to 2.5 s before Tailscale is tried
+        var waited = 0
+        while (bonjour == null && prefs.getString("last", null) == null && waited < 2500) { Thread.sleep(250); waited += 250 }
         bonjour?.let { tries += it to "Wi-Fi" }
         manual.value.takeIf { it.isNotEmpty() }?.let { m ->
             tries += (if (m.startsWith("http")) m else if (m.contains(":")) "http://$m" else "http://$m:$PORT") to "typed address"
@@ -134,7 +137,7 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
         for ((url, how) in tries.distinctBy { it.first }) {
             val d = get("$url/hello", 900) ?: continue
             val name = try { JSONObject(String(d)).optString("name", "the Mac") } catch (e: Exception) { continue }
-            if (how != "cable") prefs.edit().putString("last", url).apply()
+            if (how == "Wi-Fi") prefs.edit().putString("last", url).apply()      // only the local network is remembered
             status.value = "$name · $how"
             base = url
             return url

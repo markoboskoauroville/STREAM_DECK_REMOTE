@@ -5,7 +5,7 @@
 import AppKit
 import SwiftUI
 
-let VERSION = 7
+let VERSION = 8
 let NAME = "Stream Deck Remote (Mantra)"
 
 final class Model: ObservableObject {
@@ -18,6 +18,7 @@ final class Model: ObservableObject {
     @Published var deckLine = ""
     @Published var profile = ""
     @Published var keysAllowed = true
+    @Published var cableOn = true
 
     let apps = Apps()
     let obs = OBS()
@@ -49,6 +50,7 @@ final class Model: ObservableObject {
         deckLine = engine.deckStatus
         profile = engine.profile
         keysAllowed = FunctionKey.allowed
+        cableOn = cableLink.enabled
     }
 
     /// This Mac's addresses a phone can type (Wi-Fi, cable, Tailscale), without the loopback.
@@ -111,8 +113,17 @@ struct Panel: View {
             section("THIS MAC'S ADDRESSES (port \(PORT))") {
                 ForEach(m.addresses, id: \.self) { a in line(a).textSelection(.enabled) }
             }
-            section("CABLE / ADB") {
-                line(m.cable.isEmpty ? "no phone on adb (not needed on Wi-Fi)" : m.cable.joined(separator: ", ") + " · adb reverse on")
+            section("CABLE / ADB (not needed on Wi-Fi)") {
+                HStack(spacing: 12) {
+                    Button { m.cableLink.enabled = true; m.refresh() } label: {
+                        Text("ON").font(.system(size: 12, weight: .bold)).foregroundColor(m.cableOn ? green : grey)
+                    }.buttonStyle(.plain).accessibilityIdentifier("cableOn")
+                    Button { m.cableLink.enabled = false; m.refresh() } label: {
+                        Text("OFF").font(.system(size: 12, weight: .bold)).foregroundColor(m.cableOn ? grey : green)
+                    }.buttonStyle(.plain).accessibilityIdentifier("cableOff")
+                }
+                line(!m.cableOn ? "off: the phone uses the Wi-Fi only"
+                     : m.cable.isEmpty ? "no phone on adb" : m.cable.joined(separator: ", ") + " · adb reverse on")
             }
             section("PROFILES (the tabs on the phone)") {
                 HStack(spacing: 12) {
