@@ -5,7 +5,7 @@
 import AppKit
 import SwiftUI
 
-let VERSION = 6
+let VERSION = 7
 let NAME = "Stream Deck Remote (Mantra)"
 
 final class Model: ObservableObject {

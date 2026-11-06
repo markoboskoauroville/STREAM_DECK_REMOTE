@@ -27,3 +27,9 @@
 ## 6 · 6.11.2026, strong dark icons with glowing buttons
 
 "Please in the background of the icon and for all future icons make stronger backgrounds. In dark mode and with glowing buttons. So it's strong."
+
+## 7 · 6.11.2026, both icons, darker
+
+"You need to make both icons APK and the The one for the macouest."
+
+"Background is too light, just make it darker for icon so it doesn't. Draw too much attention."
