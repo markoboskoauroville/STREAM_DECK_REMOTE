@@ -18,7 +18,7 @@ final class Deck {
     private static let vendor = 0x0FD9
     private static let products = [0x0060, 0x006D, 0x0080]   // the original; the original v2 and the MK.2 (JPEG)
     private var jpeg = false
-    private static let reportLength = 8191, page1 = 7749
+    private static let reportLength = 8191
 
     private var manager: IOHIDManager?
     private var device: IOHIDDevice?
@@ -116,12 +116,20 @@ final class Deck {
         if jpeg { showJPEG(d, key, image); sent[key] = hash; return }
         let bmp = Deck.bmp(image)
         let k = UInt8(Deck.fromRight(key) + 1)
-        for (page, part) in [(1, bmp[..<Deck.page1]), (2, bmp[Deck.page1...])] {
-            var p: [UInt8] = [0x02, 0x01, UInt8(page), 0x00, page == 2 ? 1 : 0, k] + [UInt8](repeating: 0, count: 10)
+        // v3 (6.11.2026): each report filled to 8191 bytes, 16 of header and 8175 of picture, the last page shorter
+        // (python-elgato-streamdeck's StreamDeckOriginal today). The 7749-byte first page of v1-v2 (and of Stream
+        // Deck Control) tore the pictures into shifted bands, seen through the Pixel's camera.
+        let body = Deck.reportLength - 16
+        var page = 0, at = 0
+        while at < bmp.count {
+            let part = bmp[at..<min(bmp.count, at + body)]
+            let last: UInt8 = at + body >= bmp.count ? 1 : 0
+            var p: [UInt8] = [0x02, 0x01, UInt8(page + 1), 0x00, last, k] + [UInt8](repeating: 0, count: 10)
             p += part
             p += [UInt8](repeating: 0, count: Deck.reportLength - p.count)
             let r = IOHIDDeviceSetReport(d, kIOHIDReportTypeOutput, 2, &p, p.count)
             if r != kIOReturnSuccess { onChange?(String(format: "A key's picture was refused (0x%08x)", r)); return }
+            at += body; page += 1
         }
         sent[key] = hash
     }
