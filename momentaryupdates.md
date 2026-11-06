@@ -37,3 +37,9 @@
 ## 8 · 6.11.2026, the Wi-Fi path
 
 "And now test Wi-Fi path."
+
+## 9 · 6.11.2026, the top of the helper window, ADB and Tailscale off
+
+"Please check user interface of remote controller. Because it's Its UI is somehow uh wrong at the top."
+
+"Feel free now to disable ADB tailscale on any device. Just disable it. Or uh close it."

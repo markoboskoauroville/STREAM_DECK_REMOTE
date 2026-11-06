@@ -5,7 +5,7 @@
 import AppKit
 import SwiftUI
 
-let VERSION = 8
+let VERSION = 9
 let NAME = "Stream Deck Remote (Mantra)"
 
 final class Model: ObservableObject {
@@ -166,7 +166,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                           styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = NAME
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: Panel(m: model) { [weak self] in self?.window.orderOut(nil) })
+        // a hosting controller keeps the content below the title bar (v9: with a bare NSHostingView the ON / OFF row
+        // sat under it and was cut off at the top)
+        window.contentViewController = NSHostingController(rootView: Panel(m: model) { [weak self] in self?.window.orderOut(nil) })
+        window.setContentSize(NSSize(width: 380, height: 470))
         window.center()
         if !CommandLine.arguments.contains("--login") { window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true) }
     }
