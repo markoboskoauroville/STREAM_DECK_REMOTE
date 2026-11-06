@@ -127,20 +127,19 @@ final class Deck {
         if jpeg { showJPEG(d, key, image); sent[key] = hash; return }
         let bmp = Deck.bmp(image)
         let k = UInt8(Deck.fromRight(key) + 1)
-        // v3 (6.11.2026): each report filled to 8191 bytes, 16 of header and 8175 of picture, the last page shorter
-        // (python-elgato-streamdeck's StreamDeckOriginal today). The 7749-byte first page of v1-v2 (and of Stream
-        // Deck Control) tore the pictures into shifted bands, seen through the Pixel's camera.
-        let body = Deck.reportLength - 16
+        // two pages: 7749 bytes of the BMP, then the rest (v5, 6.11.2026: 8175 per page, tried in v3-v4, left most
+        // keys without a picture on this deck; the tearing came from the reset command sent before, not from this)
+        let body = 7749
         var page = 0, at = 0
         while at < bmp.count {
-            let part = bmp[at..<min(bmp.count, at + body)]
-            let last: UInt8 = at + body >= bmp.count ? 1 : 0
+            let part = page == 0 ? bmp[0..<body] : bmp[body...]
+            let last: UInt8 = page == 1 ? 1 : 0
             var p: [UInt8] = [0x02, 0x01, UInt8(page + 1), 0x00, last, k] + [UInt8](repeating: 0, count: 10)
             p += part
             p += [UInt8](repeating: 0, count: Deck.reportLength - p.count)
             let r = IOHIDDeviceSetReport(d, kIOHIDReportTypeOutput, 2, &p, p.count)
             if r != kIOReturnSuccess { onChange?(String(format: "A key's picture was refused (0x%08x)", r)); return }
-            at += body; page += 1
+            at = page == 0 ? body : bmp.count; page += 1
         }
         sent[key] = hash
     }

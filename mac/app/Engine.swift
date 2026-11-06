@@ -28,7 +28,8 @@ final class Engine {
         obs.onChange = { [weak self] in self?.changed() }
         deck.onPress = { [weak self] k in self?.press(k) }
         deck.onChange = { [weak self] s in
-            DispatchQueue.main.async { self?.deckStatus = s; self?.render(force: true); self?.onChange() }
+            // only a newly connected deck is drawn whole; a refused picture is not retried in a loop
+            DispatchQueue.main.async { self?.deckStatus = s; if s.hasSuffix("connected") { self?.render(force: true) }; self?.onChange() }
         }
         // only one program can hold the deck: Stream Deck Control (Mantra), which this app follows, lets it go
         for a in NSRunningApplication.runningApplications(withBundleIdentifier: "community.auroville.streamdeckcontrol") { a.terminate() }
