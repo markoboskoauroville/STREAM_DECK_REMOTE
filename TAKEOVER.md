@@ -3,23 +3,19 @@
 Written as we go, after every major step (Marko, 6.11.2026: "After every major step, write automatically take over
 document. Don't wait for closing of the session.").
 
-## Where it stands (6.11.2026 ~20:40, step 4: tested on the real deck and the real Pixel 7; Mac v5, APK v2)
+## Where it stands (6.11.2026 ~20:55, step 5)
 
-- Installed: /Applications/Stream Deck Remote (Mantra).app **v5** (release mac-v5, signed "Mantra Apps"), APK **v2** on
-  the Pixel 7 (41241FDH2S10SJ, release v2).
-- Verified: the phone finds the Mac over the cable (adb reverse set by the helper) and shows APPS (apps 1-12, NEXT,
-  F1, F2, the same as the real deck); a tap on the OBS tab switched BOTH faces to OBS; OBS's 3 scenes are keys 1-3,
-  top scene = 1 (Marko: "What is at the top is one, middle is two"); a tap on key 2 made scene 2 OBS's live output
-  (green on phone and deck). Marko swapped scenes himself after; the keys followed.
-- The real deck (original 15-key, 0x0060, serial AL21I1C06271) has a **broken display** (Marko 6.11.2026): pictures look
-  torn and black keys look blue. Judge it only roughly. Photographed through the Pixel's back camera
-  (scratchpad deckshot.sh: scrcpy camera 2 s, last frame, clip deleted).
-- Driver lessons v3-v5: the 7749-byte first page is right for this deck (8175 left keys empty); the reset command
-  before each redraw is gone; a refused picture no longer causes a redraw loop.
-- Stream Deck Control (Mantra) **removed** (Marko: "Delete one app so we have only one"): app deleted, star row and
-  icon replaced by this app, repo stream-deck-control archived with an "obsolete" line.
-- Not yet tested: same-Wi-Fi without the cable (needs Marko's one click: allow Local Network for the helper if macOS
-  asks), the press-enlarge seen by eye on both (160 ms), the MK.2 path (no MK.2 here yet).
+- Installed and tested: Mac helper **v5**, APK **v2** (see LESSONS for the deck's quirks). Pushed, building on GitHub:
+  APK **v3** (ROTATE button: portrait = line to the Mac + deck + tabs + ROTATE; landscape = immersive, only the deck,
+  small ROTATE in the corner; turning the phone rotates too, ROTATE holds against the sensor until the phone is
+  really turned) and Mac helper **v6** (OBS order re-read at every scene change and every 2 s).
+- OBS rule (Marko, 6.11.2026, request 5): keys are **absolute positions in OBS's Scenes dock**: key 1 = the top scene,
+  key 2 the next, key 3 the one below. The live scene only lights its key (green); keys never follow a scene around;
+  a reorder in the dock shows within 2 s. Code: mac/app/OBS.swift (`scenes` sorted top first, `layout()`).
+- Stream Deck Control (Mantra) removed; its repo archived. The real deck's display is broken (hardware).
+- Next: v3/v6 green → install both → test ROTATE on the Pixel (screenshots of both orientations) → check the key order
+  against OBS's dock (screenshot of OBS) → ask Marko to swap two scenes in the dock and see the keys follow.
+- Not yet tested: same-Wi-Fi without the cable (Local Network click is Marko's), MK.2, the press-enlarge by eye.
 - Open question for Marko: how to switch profile on the real deck alone (it has no tabs).
 
 ## The plan

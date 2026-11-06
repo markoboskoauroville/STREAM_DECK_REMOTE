@@ -41,6 +41,7 @@ final class OBS: NSObject, URLSessionWebSocketDelegate {
             onChange()
         }
         if running && task == nil { connect() }
+        if connected { request("GetSceneList") }               // and every 2 s, so a reorder in the dock is never missed
     }
 
     private struct Config { var port = 4455; var enabled = true; var auth = false; var password = "" }
@@ -135,7 +136,10 @@ final class OBS: NSObject, URLSessionWebSocketDelegate {
             let type = d["eventType"] as? String ?? ""
             let data = d["eventData"] as? [String: Any] ?? [:]
             if type == "CurrentProgramSceneChanged", let n = data["sceneName"] as? String {
-                current = n; onChange()
+                // the keys are absolute positions in OBS's Scenes dock (key 1 = the top scene, 2 below it, ...), never
+                // tied to a scene: the live scene only lights its key, and the order is read again at every change
+                // (Marko, 6.11.2026: "It always refresh if I change scene ... dynamically understand the order")
+                current = n; onChange(); request("GetSceneList")
             } else if ["SceneListChanged", "SceneCreated", "SceneRemoved", "SceneNameChanged"].contains(type) {
                 request("GetSceneList")
             }

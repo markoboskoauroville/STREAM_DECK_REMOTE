@@ -17,3 +17,9 @@
 "I can also swap the scenes in that case. Uh this up always follows the order of the scenes. What is at the top is one, middle is two, below that is three, etc. As you probably see from repositories. Uh the My original stream deck is broken display, so it's looks strange. But anyhow you just need to approach it. Approximately."
 
 "Please add the button. in APK to switch between portrait and landscape so When I'm in the first time, I Portrait, I can switch scenes. I mean the presets for buttons, but in the landscape I cannot. I can just switch orientation. So idea is one I choose the right Preset I am in immersive mode and I'm exiting it only by rotating the screen or pressing the button to rotate the screen."
+
+## 5 · 6.11.2026, absolute positions in the OBS dock
+
+"Please don't follow the scenes around as I told you. Its absolute position. It always refresh if I change scene. Order in my Dok. Then what is number one is at the very top? 2 below it and 3 below it. So it is not stick to certain scene. It's dynamically understand the order of scenes inside OBS."
+
+"Please write takeovers by the way."
