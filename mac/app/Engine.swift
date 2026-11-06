@@ -79,7 +79,7 @@ final class Engine {
     /// The real deck's 15 pictures; a key whose picture did not change is not sent again.
     func render(force: Bool = false) {
         guard deck.connected else { return }
-        if force { deck.clear() }
+        if force { deck.forget() }
         for (i, k) in keys().enumerated() {
             let (img, hash) = KeyArt.draw(k, scale: i == flashKey ? Engine.flashScale : 1)
             deck.show(i, img, hash: hash)

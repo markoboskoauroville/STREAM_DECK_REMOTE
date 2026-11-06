@@ -98,11 +98,22 @@ final class Deck {
         jpeg ? feature([0x03, 0x08, p], length: 32) : feature([0x05, 0x55, 0xAA, 0xD1, 0x01, p])
     }
 
-    /// Every key black.
+    /// Every key black, by sending a black picture (v4, 6.11.2026): the deck's reset command, used before, left the
+    /// keys blank blue and tore the pictures sent right after it (seen through the Pixel's camera).
     func clear() {
-        jpeg ? feature([0x03, 0x02], length: 32) : feature([0x0B, 0x63])
+        let black = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Deck.px, pixelsHigh: Deck.px, bitsPerSample: 8,
+                                     samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                                     bytesPerRow: 0, bitsPerPixel: 0)!
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: black)
+        NSColor.black.setFill(); NSRect(x: 0, y: 0, width: Deck.px, height: Deck.px).fill()
+        NSGraphicsContext.restoreGraphicsState()
         sent.removeAll()
+        for k in 0..<Deck.keys { show(k, black, hash: -1) }
     }
+
+    /// Every key sent again at the next show (nothing is erased first).
+    func forget() { sent.removeAll() }
 
     private func feature(_ b: [UInt8], length: Int = 17) {
         guard let d = device else { return }
