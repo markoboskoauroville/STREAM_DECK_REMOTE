@@ -11,3 +11,9 @@
 ## 3 · 6.11.2026, one network: the real deck and the phone mirror each other
 
 "So to make it clear, actually this application controls both Stream Deck and Stream Deck. A. P. K. And if something is clicked on the Stream Deck APK, I can see it on original Stream Deck and vice versa. And clicking has two states, so when I press button, the button and large for certain percentage and then come back indicating that it was pressed. So if I create if you create a profile for anything I ask you for example, OBS or switching applications, it's available on both devices in my APK in in real stream deck and they reflect each other's actions. If I press on the Stream Deck one button and it enlarges, it does the same on the phone. So everything is connected in one network. Yeah."
+
+## 4 · 6.11.2026, portrait to choose, landscape immersive
+
+"I can also swap the scenes in that case. Uh this up always follows the order of the scenes. What is at the top is one, middle is two, below that is three, etc. As you probably see from repositories. Uh the My original stream deck is broken display, so it's looks strange. But anyhow you just need to approach it. Approximately."
+
+"Please add the button. in APK to switch between portrait and landscape so When I'm in the first time, I Portrait, I can switch scenes. I mean the presets for buttons, but in the landscape I cannot. I can just switch orientation. So idea is one I choose the right Preset I am in immersive mode and I'm exiting it only by rotating the screen or pressing the button to rotate the screen."
