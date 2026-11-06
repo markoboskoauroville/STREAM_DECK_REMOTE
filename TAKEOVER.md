@@ -3,21 +3,25 @@
 Written as we go, after every major step (Marko, 6.11.2026: "After every major step, write automatically take over
 document. Don't wait for closing of the session.").
 
-## Where it stands (6.11.2026 ~20:55, step 5)
+## Where it stands (6.11.2026 ~20:50, step 6: the Wi-Fi path proven)
 
-- Installed and tested: Mac helper **v5**, APK **v2** (see LESSONS for the deck's quirks). Pushed, building on GitHub:
-  APK **v3** (ROTATE button: portrait = line to the Mac + deck + tabs + ROTATE; landscape = immersive, only the deck,
-  small ROTATE in the corner; turning the phone rotates too, ROTATE holds against the sensor until the phone is
-  really turned) and Mac helper **v6** (OBS order re-read at every scene change and every 2 s).
-- OBS rule (Marko, 6.11.2026, request 5): keys are **absolute positions in OBS's Scenes dock**: key 1 = the top scene,
-  key 2 the next, key 3 the one below. The live scene only lights its key (green); keys never follow a scene around;
-  a reorder in the dock shows within 2 s. Code: mac/app/OBS.swift (`scenes` sorted top first, `layout()`).
-- Stream Deck Control (Mantra) removed; its repo archived. The real deck's display is broken (hardware).
-- Icons (Marko, request 6-7): APK launcher icon and the Mac icon are near-black with quietly glowing keys (APK v4, Mac v7); rule in MANTRA_MANIFEST modules/app-icon.md.
-- Next: v3/v6 green → install both → test ROTATE on the Pixel (screenshots of both orientations) → check the key order
-  against OBS's dock (screenshot of OBS) → ask Marko to swap two scenes in the dock and see the keys follow.
-- Not yet tested: same-Wi-Fi without the cable (Local Network click is Marko's), MK.2, the press-enlarge by eye.
+- Installed: Mac helper **v9** (release mac-v9), APK **v5** on the Pixel 7 (release v5, Latest).
+- **Wi-Fi path tested (Marko: "now test Wi-Fi path")**: cable route OFF (`defaults write community.auroville.streamdeckremote
+  cable -bool false`, or the CABLE / ADB OFF switch in the helper window), `adb reverse` removed, the phone's Tailscale
+  app force-stopped (Marko: "Feel free now to disable ADB tailscale"): the phone showed "MacBook Pro · Wi-Fi"
+  (192.168.1.101 → 192.168.1.102:8963, found by Bonjour) and key presses switched OBS 1 → 3 → 2 → 1 with the live scene
+  following. No ADB, no Tailscale. macOS did not block the Local Network (the helper answered the phone at once).
+  CABLE is still OFF on this Mac; ON brings the `adb reverse` back.
+- v8-v9 fixes: Bonjour gets 2.5 s before Tailscale; only the local address is remembered; the helper window's ON/OFF row
+  was cut under the title bar (now an NSHostingController).
+- Done earlier: shared engine (real deck + phone mirror, press enlarges 118 % on both), APPS (apps 1-12, NEXT, F1,
+  F2) and OBS (absolute dock positions, key 1 = top scene, re-read at every change and every 2 s), ROTATE and the
+  immersive landscape deck (APK v3), dark icons with quiet glowing keys (APK v4, Mac v7), Stream Deck Control removed.
+- The real deck's display is broken (hardware); judge it roughly.
+- Not yet tested: the ROTATE press-hold against the sensor on a real turn of the phone (Marko's hand), the press
+  enlarge by eye, the MK.2.
 - Open question for Marko: how to switch profile on the real deck alone (it has no tabs).
+- Next profile: whatever Marko names.
 
 ## The plan
 
