@@ -23,3 +23,7 @@
 "Please don't follow the scenes around as I told you. Its absolute position. It always refresh if I change scene. Order in my Dok. Then what is number one is at the very top? 2 below it and 3 below it. So it is not stick to certain scene. It's dynamically understand the order of scenes inside OBS."
 
 "Please write takeovers by the way."
+
+## 6 · 6.11.2026, strong dark icons with glowing buttons
+
+"Please in the background of the icon and for all future icons make stronger backgrounds. In dark mode and with glowing buttons. So it's strong."
