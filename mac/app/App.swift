@@ -5,7 +5,7 @@
 import AppKit
 import SwiftUI
 
-let VERSION = 1
+let VERSION = 2
 let NAME = "Stream Deck Remote (Mantra)"
 
 final class Model: ObservableObject {
@@ -15,15 +15,18 @@ final class Model: ObservableObject {
     @Published var obsLine = ""
     @Published var serverLine = ""
     @Published var addresses: [String] = []
+    @Published var deckLine = ""
+    @Published var profile = ""
+    @Published var keysAllowed = true
 
     let apps = Apps()
     let obs = OBS()
     let cableLink = Cable()
-    lazy var server = Server(apps: apps, obs: obs)
+    lazy var engine = Engine(apps: apps, obs: obs)
+    lazy var server = Server(engine: engine)
 
     func start() {
-        apps.onChange = { [weak self] in self?.server.changed() }
-        obs.onChange = { [weak self] in self?.server.changed(); self?.refresh() }
+        engine.onChange = { [weak self] in self?.server.changed(); self?.refresh() }
         cableLink.onChange = { [weak self] in self?.refresh() }
         server.onSeen = { [weak self] who in
             guard let self = self else { return }
@@ -31,6 +34,7 @@ final class Model: ObservableObject {
         }
         apps.start()
         obs.start()
+        engine.start()
         server.start()
         cableLink.start()
         Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in self?.refresh() }
@@ -42,6 +46,9 @@ final class Model: ObservableObject {
         serverLine = server.state
         cable = cableLink.phones
         addresses = Model.ipv4()
+        deckLine = engine.deckStatus
+        profile = engine.profile
+        keysAllowed = FunctionKey.allowed
     }
 
     /// This Mac's addresses a phone can type (Wi-Fi, cable, Tailscale), without the loopback.
@@ -76,16 +83,26 @@ struct Panel: View {
             HStack(spacing: 10) {
                 Button { } label: { Text("ON").font(.system(size: 13, weight: .bold)).foregroundColor(green) }
                     .buttonStyle(.plain).accessibilityIdentifier("on")
-                Button { m.server.stop(); NSApp.terminate(nil) } label: {
+                Button { m.engine.stop(); m.server.stop(); NSApp.terminate(nil) } label: {
                     Text("OFF").font(.system(size: 13, weight: .bold)).foregroundColor(grey)
                 }.buttonStyle(.plain).accessibilityIdentifier("off")
                 Text(NAME).font(.system(size: 13, weight: .semibold))
                 Spacer()
+                if !m.keysAllowed {
+                    // F1 / F2 post keys, which needs Accessibility (MANTRA_MANIFEST: amber PERMISSIONS top right)
+                    Button { FunctionKey.askPermission() } label: {
+                        Text("PERMISSIONS").font(.system(size: 11, weight: .bold)).foregroundColor(.orange)
+                    }.buttonStyle(.plain).accessibilityIdentifier("permissions")
+                }
                 Button(action: close) {
                     Image(systemName: "xmark").foregroundColor(grey).frame(width: 28, height: 28).contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityIdentifier("close")
             }
             Divider()
+            section("THE STREAM DECK") {
+                line(m.deckLine)
+                line("The real deck and the phone show the same keys; a press on either shows on both.")
+            }
             section("THE PHONE") {
                 line("Stream Deck Remote on the phone finds this Mac by itself on the same Wi-Fi, or over the cable.")
                 line("Last asked by: \(m.lastPhone)" + (m.lastSeen.map { " · \(Int(-$0.timeIntervalSinceNow)) s ago" } ?? ""))
@@ -97,8 +114,16 @@ struct Panel: View {
             section("CABLE / ADB") {
                 line(m.cable.isEmpty ? "no phone on adb (not needed on Wi-Fi)" : m.cable.joined(separator: ", ") + " · adb reverse on")
             }
-            section("PROFILES") {
-                line("APPS · application switcher")
+            section("PROFILES (the tabs on the phone)") {
+                HStack(spacing: 12) {
+                    ForEach(Engine.profiles, id: \.self) { p in
+                        Button { m.engine.setProfile(p) } label: {
+                            Text(p.uppercased()).font(.system(size: 12, weight: .bold))
+                                .foregroundColor(p == m.profile ? green : grey)
+                        }.buttonStyle(.plain).accessibilityIdentifier("profile-\(p)")
+                    }
+                }
+                line("APPS · application switcher, apps on 1–12, NEXT, F1, F2")
                 line("OBS · \(m.obsLine)")
             }
             Spacer(minLength: 0)

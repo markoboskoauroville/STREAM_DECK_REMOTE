@@ -4,24 +4,26 @@ import Network
 /// The phone's line, HTTP on port 8963 (MANTRA_PORTS name `streamdeck-remote`), announced by Bonjour as
 /// `_mantradeck._tcp` so the phone finds the Mac on the same Wi-Fi by itself, with no ADB and no address typed.
 ///   GET /hello                          {"name","version"}
-///   GET /state?profile=apps|obs&v=N     the 15 keys; held up to 8 s until something changes after version N
-///   GET /press?profile=…&key=i          key i (0…14) pressed on the phone
+///   GET /state?v=N                      the profile in use and its 15 keys, the same the real deck shows; held up to
+///                                       8 s until something changes after version N; "presses"/"pressed" let the
+///                                       phone enlarge the key the real deck enlarged
+///   GET /press?key=i                    key i (0…14) pressed on the phone (the real deck enlarges it too)
+///   GET /profile?p=apps|obs             the tab chosen on the phone: both faces change to it
 ///   GET /icon?id=<bundle id>            an app's icon, PNG
 /// Only the home network, Tailscale and this Mac itself (adb reverse) are answered. macOS 15 holds back the home
 /// Wi-Fi until Local Network is allowed for this app (MACOS_TASK_SWITCHER LESSONS, 26.10.2026).
 let PORT: UInt16 = 8963
 
 final class Server {
-    var apps: Apps
-    var obs: OBS
+    let engine: Engine
     var onSeen: (String) -> Void = { _ in }
     private var listener: NWListener?
     private(set) var version = 1
-    private var waiting: [(c: NWConnection, profile: String, after: Int)] = []
+    private var waiting: [(c: NWConnection, after: Int)] = []
     private(set) var state = "starting"
     let name = Host.current().localizedName ?? "Mac"
 
-    init(apps: Apps, obs: OBS) { self.apps = apps; self.obs = obs }
+    init(engine: Engine) { self.engine = engine }
 
     func start() {
         guard listener == nil, let port = NWEndpoint.Port(rawValue: PORT),
@@ -51,13 +53,13 @@ final class Server {
         version += 1
         let w = waiting
         waiting.removeAll()
-        for x in w { reply(x.c, json(state(x.profile))) }
+        let body = json(state())
+        for x in w { reply(x.c, body) }
     }
 
-    private func state(_ profile: String) -> [String: Any] {
-        var s: [String: Any] = ["v": version, "profile": profile, "mac": name]
-        if profile == "obs" { obs.fill(&s) } else { apps.fill(&s) }
-        return s
+    private func state() -> [String: Any] {
+        ["v": version, "profile": engine.profile, "mac": name, "keys": engine.keys(), "title": engine.title,
+         "note": engine.note, "presses": engine.presses, "pressed": engine.lastPressed, "flash": engine.flashKey]
     }
 
     private func allowed(_ c: NWConnection) -> Bool {
@@ -90,19 +92,20 @@ final class Server {
             case "/hello":
                 self.reply(c, self.json(["name": self.name, "version": VERSION]))
             case "/state":
-                let profile = q("profile") ?? "apps"
                 let after = Int(q("v") ?? "") ?? -1
-                if after != self.version { self.reply(c, self.json(self.state(profile))); return }
-                self.waiting.append((c, profile, after))
+                if after != self.version { self.reply(c, self.json(self.state())); return }
+                self.waiting.append((c, after))
                 DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
                     guard let self = self, self.waiting.contains(where: { $0.c === c }) else { return }
                     self.waiting.removeAll { $0.c === c }
-                    self.reply(c, self.json(self.state(profile)))
+                    self.reply(c, self.json(self.state()))
                 }
             case "/press":
-                let i = Int(q("key") ?? "") ?? -1
-                if q("profile") == "obs" { self.obs.press(i) } else { self.apps.press(i) }
+                self.engine.press(Int(q("key") ?? "") ?? -1)
                 self.reply(c, self.json(["ok": true]))
+            case "/profile":
+                self.engine.setProfile(q("p") ?? "")
+                self.reply(c, self.json(["ok": true, "profile": self.engine.profile]))
             case "/icon":
                 if let png = Apps.icon(q("id") ?? "") { self.reply(c, png, type: "image/png") }
                 else { self.reply(c, Data("no icon".utf8), status: "404 Not Found", type: "text/plain") }

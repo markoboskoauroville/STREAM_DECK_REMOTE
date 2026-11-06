@@ -5,13 +5,13 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -95,6 +96,14 @@ private fun DeckScreen(link: Link) {
     val connected by link.connected.collectAsState()
     var ask by remember { mutableStateOf(false) }
     val shown = st?.takeIf { it.profile == profile && connected }
+    // a press on either face (the real deck or this phone) enlarges that key here too
+    val pulses = remember { mutableStateMapOf<Int, Int>() }
+    var seen by remember { mutableStateOf(-1L) }
+    LaunchedEffect(st?.presses) {
+        val s = st ?: return@LaunchedEffect
+        if (seen >= 0 && s.presses > seen && s.pressed in 0..14) pulses[s.pressed] = (pulses[s.pressed] ?: 0) + 1
+        seen = s.presses
+    }
 
     Box(Modifier.fillMaxSize().background(Bg).windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)) {
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -127,7 +136,7 @@ private fun DeckScreen(link: Link) {
                         for (r in 0 until 3) Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                             for (c in 0 until 5) {
                                 val i = r * 5 + c
-                                KeyView(shown?.keys?.getOrNull(i), k, i, link)
+                                KeyView(shown?.keys?.getOrNull(i), k, i, pulses[i] ?: 0, link)
                             }
                         }
                     }
@@ -146,11 +155,19 @@ private fun DeckScreen(link: Link) {
 }
 
 @Composable
-private fun KeyView(k: KeyInfo?, size: Dp, index: Int, link: Link) {
+private fun KeyView(k: KeyInfo?, size: Dp, index: Int, pulse: Int, link: Link) {
     val haptic = LocalHapticFeedback.current
     val src = remember { MutableInteractionSource() }
-    val pressed by src.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.9f else 1f, label = "press")
+    // the press: up to 118 % and back, as the real deck shows it (Marko, 6.11.2026: "the button enlarges for certain
+    // percentage and then come back indicating that it was pressed")
+    val grow = remember { Animatable(1f) }
+    LaunchedEffect(pulse) {
+        if (pulse > 0) {
+            grow.animateTo(1.18f, tween(80))
+            grow.animateTo(1f, tween(160))
+        }
+    }
+    val scale = grow.value
     val live = k != null && k.kind != "empty"
     val ring = k?.active == true && k.kind == "scene"
     val shape = RoundedCornerShape(size * 0.16f)
@@ -181,6 +198,8 @@ private fun KeyView(k: KeyInfo?, size: Dp, index: Int, link: Link) {
             }
             "scene" -> Text(k.label, color = if (k.active) Green else White, fontWeight = FontWeight.Black,
                 fontSize = with(d) { (size * 0.46f).toSp() })
+            "fkey" -> Text(k.label, color = White, fontWeight = FontWeight.Black,
+                fontSize = with(d) { (size * 0.5f).toSp() })
             "next" -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("NEXT", color = White, fontWeight = FontWeight.Bold, fontSize = with(d) { (size * 0.2f).toSp() })
                 Text("▶", color = Green, fontSize = with(d) { (size * 0.2f).toSp() })

@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -25,8 +24,12 @@ import java.net.URLEncoder
 /** One key as the Mac describes it: kind app · open · scene · next · empty. */
 data class KeyInfo(val kind: String, val label: String, val icon: String, val active: Boolean)
 
-/** One profile's keys at version v; title and note are the lines under the deck. */
-data class DeckState(val v: Long, val profile: String, val title: String, val note: String, val keys: List<KeyInfo>)
+/**
+ * The profile in use and its keys at version v, the same the real Stream Deck shows; title and note are the lines
+ * under the deck. presses counts every press on either face, pressed is the last pressed key: the phone enlarges it.
+ */
+data class DeckState(val v: Long, val profile: String, val title: String, val note: String, val keys: List<KeyInfo>,
+                     val presses: Long, val pressed: Int)
 
 /** The Mac's helper, Stream Deck Remote (Mantra), on port 8963. */
 const val PORT = 8963
@@ -54,7 +57,7 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
     fun start() {
         startBonjour()
         scope.launch(Dispatchers.IO) {
-            profile.collectLatest { p ->
+            run {
                 var v = -1L
                 while (isActive) {
                     visible.first { it }                                  // nothing is asked while the app is not seen
@@ -66,10 +69,14 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
                         continue
                     }
                     // a long poll: the Mac answers at once when anything changed since v, else after 8 s
-                    val body = get("$b/state?profile=$p&v=$v", 12000)
+                    val body = get("$b/state?v=$v", 12000)
                     val s = body?.let { parse(it) }
                     if (s == null) { base = null; v = -1; connected.value = false; continue }
                     v = s.v
+                    if (s.profile.isNotEmpty() && s.profile != profile.value && System.currentTimeMillis() > picked + 1500) {
+                        profile.value = s.profile
+                        prefs.edit().putString("profile", s.profile).apply()
+                    }
                     state.value = s
                     connected.value = true
                 }
@@ -77,10 +84,16 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
         }
     }
 
+    @Volatile private var picked = 0L
+
+    /** A tab chosen on the phone: the Mac changes both faces, the real deck too. */
     fun setProfile(p: String) {
         if (p == profile.value) return
+        picked = System.currentTimeMillis()
         prefs.edit().putString("profile", p).apply()
         profile.value = p
+        val b = base ?: return
+        scope.launch(Dispatchers.IO) { get("$b/profile?p=$p", 4000) }
     }
 
     fun setManual(a: String) {
@@ -92,8 +105,7 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
 
     fun press(i: Int) {
         val b = base ?: return
-        val p = profile.value
-        scope.launch(Dispatchers.IO) { get("$b/press?profile=$p&key=$i", 4000) }
+        scope.launch(Dispatchers.IO) { get("$b/press?key=$i", 4000) }
     }
 
     fun loadIcon(id: String) {
@@ -165,7 +177,8 @@ class Link(private val ctx: Context, private val scope: CoroutineScope) {
             val k = ks!!.getJSONObject(i)
             KeyInfo(k.optString("kind", "empty"), k.optString("label", ""), k.optString("icon", ""), k.optBoolean("active", false))
         }
-        DeckState(j.optLong("v", 0), j.optString("profile", ""), j.optString("title", ""), j.optString("note", ""), keys)
+        DeckState(j.optLong("v", 0), j.optString("profile", ""), j.optString("title", ""), j.optString("note", ""), keys,
+            j.optLong("presses", 0), j.optInt("pressed", -1))
     } catch (e: Exception) { null }
 
     private fun get(url: String, timeout: Int): ByteArray? = try {

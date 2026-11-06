@@ -178,15 +178,19 @@ final class OBS: NSObject, URLSessionWebSocketDelegate {
         return "\(scenes.count) scenes · live: \(current)"
     }
 
-    func fill(_ s: inout [String: Any]) {
-        s["keys"] = layout()
-        if !running { s["title"] = "OBS is not open"; s["note"] = "Key 1 opens it" }
-        else if !connected { s["title"] = "OBS"; s["note"] = problem.isEmpty ? "Connecting to OBS…" : problem }
-        else {
-            let n = (scenes.firstIndex(of: current) ?? -1) + 1
-            s["title"] = n > 0 ? "\(n) · \(current)" : current
-            s["note"] = "OBS · \(scenes.count) scenes"
-        }
+    func keys() -> [[String: Any]] { layout() }
+
+    var title: String {
+        if !running { return "OBS is not open" }
+        if !connected { return "OBS" }
+        let n = (scenes.firstIndex(of: current) ?? -1) + 1
+        return n > 0 ? "\(n) · \(current)" : current
+    }
+
+    var note: String {
+        if !running { return "Key 1 opens it" }
+        if !connected { return problem.isEmpty ? "Connecting to OBS…" : problem }
+        return "OBS · \(scenes.count) scenes"
     }
 
     func press(_ i: Int) {

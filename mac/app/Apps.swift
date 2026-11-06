@@ -42,11 +42,11 @@ final class Apps {
         return order.compactMap { pid in running.first { $0.processIdentifier == pid } }
     }
 
-    /// The 15 keys: (what the phone draws, the app behind it).
+    /// The 15 keys, as on Stream Deck Control (Mantra) v3 (Marko, 1.11.2026: "The last button is F2. The one before
+    /// last is F1. The third button from the back is Next Page."): apps on keys 1-12, NEXT 13, F1 14, F2 15.
     private func layout() -> [([String: Any], NSRunningApplication?)] {
         let all = apps()
-        let paged = all.count > 15
-        let per = paged ? 14 : 15
+        let per = 12
         let pages = max(1, (all.count + per - 1) / per)
         page = min(page, pages - 1)
         let front = NSWorkspace.shared.frontmostApplication?.processIdentifier
@@ -54,28 +54,37 @@ final class Apps {
             (["kind": "app", "label": Apps.name(a), "icon": Apps.iconId(a), "active": a.processIdentifier == front], a)
         }
         while k.count < per { k.append((["kind": "empty"], nil)) }
-        if paged { k.append((["kind": "next", "label": "\(page + 1) / \(pages)"], nil)) }
+        k.append((["kind": "next", "label": "\(page + 1) / \(pages)"], nil))
+        k.append((["kind": "fkey", "label": "F1"], nil))
+        k.append((["kind": "fkey", "label": "F2"], nil))
         return k
     }
 
-    func fill(_ s: inout [String: Any]) {
-        let k = layout()
-        s["keys"] = k.map { $0.0 }
-        s["title"] = NSWorkspace.shared.frontmostApplication.map { Apps.name($0) } ?? ""
-        s["note"] = "APPLICATION SWITCHER · \(order.count) apps open"
-    }
+    func keys() -> [[String: Any]] { layout().map { $0.0 } }
+
+    var title: String { NSWorkspace.shared.frontmostApplication.map { Apps.name($0) } ?? "" }
+    var note: String { "APPLICATION SWITCHER · \(order.count) apps open" }
 
     func press(_ i: Int) {
         let k = layout()
         guard i >= 0, i < k.count else { return }
-        if k[i].0["kind"] as? String == "next" { page += 1; if page * 14 >= order.count { page = 0 }; onChange(); return }
-        guard let a = k[i].1 else { return }
-        order.removeAll { $0 == a.processIdentifier }
-        order.insert(a.processIdentifier, at: 0)
-        if let id = a.bundleIdentifier { Apps.saved = [id] + Apps.saved.filter { $0 != id } }
-        page = 0
-        Apps.bringFront(a)
-        onChange()
+        switch k[i].0["kind"] as? String {
+        case "next":
+            page += 1
+            if page * 12 >= order.count { page = 0 }
+            onChange()
+        case "fkey":
+            FunctionKey.press(i == 13 ? 1 : 2)
+        case "app":
+            guard let a = k[i].1 else { return }
+            order.removeAll { $0 == a.processIdentifier }
+            order.insert(a.processIdentifier, at: 0)
+            if let id = a.bundleIdentifier { Apps.saved = [id] + Apps.saved.filter { $0 != id } }
+            page = 0
+            Apps.bringFront(a)
+            onChange()
+        default: break
+        }
     }
 
     static func name(_ a: NSRunningApplication) -> String {
@@ -98,6 +107,13 @@ final class Apps {
 
     // MARK: icons, PNG 160 px, by bundle id (or pid:<n>)
     private static var cache: [String: Data] = [:]
+
+    static func image(_ id: String) -> NSImage? {
+        if id.hasPrefix("pid:"), let pid = Int32(id.dropFirst(4)) { return NSRunningApplication(processIdentifier: pid)?.icon }
+        if let a = NSRunningApplication.runningApplications(withBundleIdentifier: id).first { return a.icon }
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) { return NSWorkspace.shared.icon(forFile: url.path) }
+        return nil
+    }
 
     static func icon(_ id: String) -> Data? {
         if let d = cache[id] { return d }
