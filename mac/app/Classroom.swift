@@ -252,7 +252,7 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
         func text(_ t: String, _ pt: CGFloat, _ y: CGFloat, _ c: NSColor, _ w: NSFont.Weight = .bold) {
             let p = NSMutableParagraphStyle(); p.alignment = .center; p.lineBreakMode = .byTruncatingTail
             let a: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: pt * u, weight: w), .foregroundColor: c,
-                                                    .paragraphStyle: p, .kern: 0.6 * u]
+                                                    .paragraphStyle: p, .kern: (pt > 9 ? 0.6 : 0) * u]
             (t as NSString).draw(in: R(2, y, 68, pt * 1.35), withAttributes: a)
         }
         switch what {
@@ -279,7 +279,7 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
                 let r = NSBezierPath(roundedRect: R(2, 2, 68, 68), xRadius: 8 * u, yRadius: 8 * u); r.lineWidth = 3 * u; r.stroke()
             }
             // never cut: the name's size from its length (MANTRESHWAR fits)
-            text(label.uppercased(), min(13, 88 / CGFloat(max(1, label.count))), 33, active ? .white : NSColor(white: 0.85, alpha: 1))
+            text(label.uppercased(), min(13, 74 / CGFloat(max(1, label.count))), 33, active ? .white : NSColor(white: 0.85, alpha: 1))
             let n = k["v"] as? String ?? ""
             text((k["role"] as? String ?? "") + (n.isEmpty ? "" : "  " + n), 9, 19, active ? mpaGreen : dim, .semibold)
             text(active ? (n.isEmpty ? "LAYOUT ▲" : "LAYOUT ▲ · NEXT") : "", n.isEmpty ? 8 : 7, 6, mpaGreen, .semibold)
