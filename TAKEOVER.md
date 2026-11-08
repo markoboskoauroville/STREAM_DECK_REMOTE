@@ -3,6 +3,20 @@
 Written as we go, after every major step (Marko, 6.11.2026: "After every major step, write automatically take over
 document. Don't wait for closing of the session.").
 
+## Where it stands (8.11.2026 ~11:30, closed: the CLASSROOM profile; Mac v15, APK v6)
+
+- **CLASSROOM**, the third profile (requests 11-13, MPA 194-195): the MPA classroom remote on the deck (mac/app/Classroom.swift).
+  It joins wss://mpa-academy.pages.dev/api/room/<room>?rc=1&d=rc-deck as the teacher's invisible remote, with a session
+  cookie signed here from ~/.mpa/session_secret (12 h, never stored). Room: UserDefaults `classroom`, default natasha-27de.
+  Row 1: the five layouts with the page's own pictures, for the lit person. Row 2 (host) and row 3 (guest): NAME (press =
+  layouts for that person; more than two people: the lit name again shows the next two) · MIC (MUTED in red) · ECHO +
+  NOISE (one key, both together) · CAMERA · row 2's last key SWAP (who speaks under it). The phone draws each CLASSROOM key
+  as the Mac's PNG (`/icon?id=cls:<md5>`, kind "cls"), so the phone and the real deck show the same picture.
+- Seen live 8.11.2026: Mantreshwar + Natasha read correctly, SWAP showed "NATASHA" with the host muted; key pictures
+  checked as a 15-key grid. Keys were NOT pressed during her lesson.
+- **APK v6 installed on the Nothing (A142) over the cable, never opened**: Marko's first look is waiting.
+- The deck key still reads "ECHO + NOISE"; the classroom now says "No noise" (rename at the next build).
+
 ## Where it stands (6.11.2026 ~20:55, step 7: the helper shows the deck like the phone; Mac v10, APK v5)
 
 - **Mac helper v10** (release mac-v10, installed): its window is the phone's view on top: the 15 keys (a click presses,

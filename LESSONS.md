@@ -8,3 +8,7 @@
   The same picture looked torn under Stream Deck Control too. Test it roughly; the phone is the exact face.
 - (6.11.2026) The original deck: first page 7749 bytes of BMP, the rest on page 2 (8175 per page left keys empty).
   Never send the reset feature report right before pictures; and never redraw on a refused picture (a loop).
+- (8.11.2026) A profile whose keys are drawn on the Mac (status pictures) reaches the phone as PNGs by an id that changes with
+  the state (md5 of what the key shows); the phone keeps the last picture while the next loads, so a press never blinks.
+- (8.11.2026) `if let (a, b) = optionalTuple` is not Swift: bind the optional, then destructure (cost one GitHub build).
+
