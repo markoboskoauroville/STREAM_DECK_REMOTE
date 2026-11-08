@@ -67,3 +67,7 @@ Status: done: either key on the CLASSROOM profile sets both for that person (Mac
 
 "Please make a button in in my stream deck and in my controls. To swap audio. So either one audio is working or the other because she's not having headphones and we cannot speak at the same time. So one or the other"
 Status: done: CLASSROOM row 2 = NAME · MIC · ECHO + NOISE (one key, the pair) · CAMERA · SWAP (who speaks under it); a press opens the closed microphone and closes the open one (host and the lit guest). Mac v14.
+
+## 14 · 8.11.2026, ~11:40, fix it on the cable
+
+"My phone is on cable. Please stream deck remote fix now.install and debug"
