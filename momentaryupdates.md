@@ -49,3 +49,11 @@
 "Uh I activate uh Which your camera on OBS or can watch OBS if it's really switching, but looks like it's really switching."
 
 "NOW FIX BOTTOM PF HELPER ONS IS ONN SECOND SCREEN PLEAASE WRITE IN MANIFEST DTAAT My computer has two screens, you always need to check both.Actually the the Stream Deck cannot switch the profiles but I can switch it through the app on the phone or through the app on my Meck. So if I open stream remote. I want to have the same view. Is on my phone. Plus all other technical details below it. So I can also switch the profiles On the computer and it will be switched on my stream deck."
+
+## 11 · 8.11.2026, the CLASSROOM profile (MPA classroom remote)
+
+"Please build and install on my Nothing phone Our emulation of the Stream Deck. I need also next profile and this is the profile to control my video ninja session happening right now. I want to be able to switch all the views, layouts. Check layouts and build all the layouts with the identical icons in my stream deck on the phone. Plus controlling each participants. Separately. Uh with the noise reduction and Canceling Please build it now."
+"Everything is open in my session. Don't make hallucinations. Even now I am opening the extension there. There are three types opened. Our dot communityAnd uh I need to have also the mute. for microphones for every participant."
+"https://mpa-academy.pages.dev/portal/remote?s=natasha-27de"
+
+Status: saved first (read as: a third profile CLASSROOM = the MPA remote page on the deck: the five layout squares with the page's icons, per participant mic mute, echo cancel, noise reduction; built by GitHub, installed on the Nothing phone).
