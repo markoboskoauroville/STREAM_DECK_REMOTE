@@ -159,7 +159,8 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             for w in ["mic", "ec", "cam"] {
                 k.append(["kind": "cls", "what": w, "id": id, "active": s[w] as? Bool ?? false, "on": has])
             }
-            if row == 0 && page == 0, let (h, g) = pair() {
+            if row == 0 && page == 0, let pr = pair() {
+                let (h, g) = pr
                 let hm = st(h)["mic"] as? Bool ?? false, gm = st(g)["mic"] as? Bool ?? false
                 let who = hm && !gm ? "YOU SPEAK" : !hm && gm ? (people[g].map(shortName) ?? "GUEST").uppercased() : hm ? "BOTH OPEN" : "BOTH SHUT"
                 k.append(["kind": "cls", "what": "swap", "label": who, "active": hm != gm, "on": true])
@@ -201,7 +202,8 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             else { target = id }
             onChange()
         case "swap":
-            guard let (h, g) = pair() else { return }
+            guard let pr = pair() else { return }
+            let (h, g) = pr
             let hostSpeaks = !((st(h)["mic"] as? Bool ?? false) && !(st(g)["mic"] as? Bool ?? false))
             setState(h, "mic", hostSpeaks); setState(g, "mic", !hostSpeaks)
         case "mic", "ec", "ns", "cam":
