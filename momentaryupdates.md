@@ -57,3 +57,8 @@
 "https://mpa-academy.pages.dev/portal/remote?s=natasha-27de"
 
 Status: saved first (read as: a third profile CLASSROOM = the MPA remote page on the deck: the five layout squares with the page's icons, per participant mic mute, echo cancel, noise reduction; built by GitHub, installed on the Nothing phone).
+
+## 12 · 8.11.2026, echo cancel + noise reduction as a pair (MPA request 194)
+
+"Please gang both buttons in controls of settings. Echo cancel and noise reduction are going together as a pair."
+Status: done: either key on the CLASSROOM profile sets both for that person (Mac v13).

@@ -195,7 +195,9 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             onChange()
         case "mic", "ec", "ns", "cam":
             guard let id = k[i]["id"] as? String, !st(id).isEmpty else { return }
-            setState(id, what, !(st(id)[what] as? Bool ?? false))
+            let v = !(st(id)[what] as? Bool ?? false)
+            // MPA request 194: echo cancel and noise reduction switch as a pair
+            for w in (what == "ec" || what == "ns") ? ["ec", "ns"] : [what] { setState(id, w, v) }
         default: break
         }
     }
