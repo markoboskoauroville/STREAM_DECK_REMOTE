@@ -5,7 +5,7 @@
 import AppKit
 import SwiftUI
 
-let VERSION = 10
+let VERSION = 11
 let NAME = "Stream Deck Remote (Mantra)"
 
 final class Model: ObservableObject {
@@ -26,7 +26,8 @@ final class Model: ObservableObject {
     let apps = Apps()
     let obs = OBS()
     let cableLink = Cable()
-    lazy var engine = Engine(apps: apps, obs: obs)
+    let classroom = Classroom()
+    lazy var engine = Engine(apps: apps, obs: obs, classroom: classroom)
     lazy var server = Server(engine: engine)
 
     func start() {
@@ -38,6 +39,7 @@ final class Model: ObservableObject {
         }
         apps.start()
         obs.start()
+        classroom.start()
         engine.start()
         server.start()
         cableLink.start()
@@ -203,6 +205,7 @@ struct Panel: View {
             section("PROFILES") {
                 line("APPS · application switcher, apps on 1–12, NEXT, F1, F2")
                 line("OBS · \(m.obsLine)")
+                line("CLASSROOM · MPA classroom remote: layouts (row 1), per person mic, echo cancel, noise reduction, camera")
                 line("The real deck cannot switch profiles; the tabs above (or on the phone) switch all three.")
             }
             Text("v\(VERSION)").font(.system(size: 11)).foregroundColor(grey)

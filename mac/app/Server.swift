@@ -107,7 +107,8 @@ final class Server {
                 self.engine.setProfile(q("p") ?? "")
                 self.reply(c, self.json(["ok": true, "profile": self.engine.profile]))
             case "/icon":
-                if let png = Apps.icon(q("id") ?? "") { self.reply(c, png, type: "image/png") }
+                if (q("id") ?? "").hasPrefix("cls:"), let png = self.engine.classroom.png(q("id") ?? "") { self.reply(c, png, type: "image/png") }
+                else if let png = Apps.icon(q("id") ?? "") { self.reply(c, png, type: "image/png") }
                 else { self.reply(c, Data("no icon".utf8), status: "404 Not Found", type: "text/plain") }
             default:
                 self.reply(c, Data("no such thing".utf8), status: "404 Not Found", type: "text/plain")

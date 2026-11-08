@@ -77,7 +77,7 @@ private val Grey = Color(0xFF8E8E93)
 private val White = Color(0xFFF2F2F7)
 
 /** The profiles, the tabs at the bottom (Marko, 6.11.2026: "we can make tabs at the bottom so user can switch"). */
-private val PROFILES = listOf("apps" to "APPS", "obs" to "OBS")
+private val PROFILES = listOf("apps" to "APPS", "obs" to "OBS", "classroom" to "CLASS")
 
 /**
  * Portrait chooses, landscape plays (Marko, 6.11.2026: "once I choose the right Preset I am in immersive mode and I'm
@@ -292,6 +292,14 @@ private fun KeyView(k: KeyInfo?, size: Dp, index: Int, pulse: Int, link: Link) {
             }
             "scene" -> Text(k.label, color = if (k.active) Green else White, fontWeight = FontWeight.Black,
                 fontSize = with(d) { (size * 0.46f).toSp() })
+            // CLASSROOM (request 11): the Mac draws the key, the same picture as the real deck; the last one stays
+            // up while the next loads, so a press never blinks
+            "cls" -> {
+                LaunchedEffect(k.icon) { link.loadIcon(k.icon) }
+                var last by remember(index) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+                link.icons[k.icon]?.let { last = it }
+                last?.let { Image(it, null, Modifier.fillMaxSize()) }
+            }
             "fkey" -> Text(k.label, color = White, fontWeight = FontWeight.Black,
                 fontSize = with(d) { (size * 0.5f).toSp() })
             "next" -> Column(horizontalAlignment = Alignment.CenterHorizontally) {

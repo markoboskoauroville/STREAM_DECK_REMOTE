@@ -6,12 +6,13 @@ import AppKit
 /// and the phone (HTTP) both show it and both press it. A press, from either, enlarges the key on both for a moment
 /// ("when I press button, the button enlarges for certain percentage and then come back"), then the key acts.
 final class Engine {
-    static let profiles = ["apps", "obs"]
+    static let profiles = ["apps", "obs", "classroom"]
     static let flashSeconds = 0.16
     static let flashScale: CGFloat = 1.18
 
     let apps: Apps
     let obs: OBS
+    let classroom: Classroom
     let deck = Deck()
     var onChange: () -> Void = {}
     private(set) var deckStatus = "Looking for the Stream Deck…"
@@ -21,11 +22,12 @@ final class Engine {
     private(set) var lastPressed = -1
     private(set) var presses = 0
 
-    init(apps: Apps, obs: OBS) { self.apps = apps; self.obs = obs }
+    init(apps: Apps, obs: OBS, classroom: Classroom) { self.apps = apps; self.obs = obs; self.classroom = classroom }
 
     func start() {
         apps.onChange = { [weak self] in self?.changed() }
         obs.onChange = { [weak self] in self?.changed() }
+        classroom.onChange = { [weak self] in self?.changed() }
         deck.onPress = { [weak self] k in self?.press(k) }
         deck.onChange = { [weak self] s in
             // only a newly connected deck is drawn whole; a refused picture is not retried in a loop
@@ -40,13 +42,13 @@ final class Engine {
     func stop() { deck.clear() }
 
     func keys() -> [[String: Any]] {
-        var k = profile == "obs" ? obs.keys() : apps.keys()
+        var k = profile == "obs" ? obs.keys() : profile == "classroom" ? classroom.keys() : apps.keys()
         while k.count < Deck.keys { k.append(["kind": "empty"]) }
         return Array(k.prefix(Deck.keys))
     }
 
-    var title: String { profile == "obs" ? obs.title : apps.title }
-    var note: String { profile == "obs" ? obs.note : apps.note }
+    var title: String { profile == "obs" ? obs.title : profile == "classroom" ? classroom.title : apps.title }
+    var note: String { profile == "obs" ? obs.note : profile == "classroom" ? classroom.note : apps.note }
 
     func changed() { render(); onChange() }
 
@@ -71,7 +73,7 @@ final class Engine {
         DispatchQueue.main.asyncAfter(deadline: .now() + Engine.flashSeconds) { [weak self] in
             guard let self = self else { return }
             if self.presses == n { self.flashKey = -1 }
-            if p == "obs" { self.obs.press(i) } else { self.apps.press(i) }
+            if p == "obs" { self.obs.press(i) } else if p == "classroom" { self.classroom.press(i) } else { self.apps.press(i) }
             self.render()
             self.onChange()
         }
@@ -137,9 +139,11 @@ enum KeyArt {
             text(label, 11, 5, NSColor(white: 0.6, alpha: 1))
         case "fkey":
             big(label, 40, .white)
+        case "cls":
+            Classroom.draw(k, u: u)
         default: break
         }
         NSGraphicsContext.restoreGraphicsState()
-        return (rep, "\(kind)|\(label)|\(icon)|\(active)|\(scale)".hashValue)
+        return (rep, "\(kind)|\(label)|\(icon)|\(active)|\(scale)|\(k["on"] ?? "")|\(k["v"] ?? "")|\(k["what"] ?? "")".hashValue)
     }
 }
