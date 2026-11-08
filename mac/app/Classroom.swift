@@ -154,9 +154,16 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             // more than two people: the lit name pressed again shows the next two (its hint says so)
             k.append(["kind": "cls", "what": "name", "label": shortName(p), "role": (p["role"] as? String) == "admin" ? "HOST" : "GUEST",
                       "active": id == target, "id": id, "v": pages > 1 ? "\(at + 1)/\(order.count)" : ""])
-            for w in ["mic", "ec", "ns", "cam"] {
+            // MPA 194: echo cancel + noise reduction are one key now (they switch as a pair); 195: SWAP AUDIO in the
+            // host's row, last key (the guest's row keeps it empty)
+            for w in ["mic", "ec", "cam"] {
                 k.append(["kind": "cls", "what": w, "id": id, "active": s[w] as? Bool ?? false, "on": has])
             }
+            if row == 0 && page == 0, let (h, g) = pair() {
+                let hm = st(h)["mic"] as? Bool ?? false, gm = st(g)["mic"] as? Bool ?? false
+                let who = hm && !gm ? "YOU SPEAK" : !hm && gm ? (people[g].map(shortName) ?? "GUEST").uppercased() : hm ? "BOTH OPEN" : "BOTH SHUT"
+                k.append(["kind": "cls", "what": "swap", "label": who, "active": hm != gm, "on": true])
+            } else { k.append(["kind": "empty"]) }
         }
         // the phone fetches each picture by an id that changes with what it shows
         pics = [:]
@@ -193,6 +200,10 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             if id == target && order.count > 2 { page += 1; let n = page * 2 < order.count ? order[page * 2] : order[0]; if page * 2 >= order.count { page = 0 }; target = n }
             else { target = id }
             onChange()
+        case "swap":
+            guard let (h, g) = pair() else { return }
+            let hostSpeaks = !((st(h)["mic"] as? Bool ?? false) && !(st(g)["mic"] as? Bool ?? false))
+            setState(h, "mic", hostSpeaks); setState(g, "mic", !hostSpeaks)
         case "mic", "ec", "ns", "cam":
             guard let id = k[i]["id"] as? String, !st(id).isEmpty else { return }
             let v = !(st(id)[what] as? Bool ?? false)
@@ -200,6 +211,14 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             for w in (what == "ec" || what == "ns") ? ["ec", "ns"] : [what] { setState(id, w, v) }
         default: break
         }
+    }
+
+    /// SWAP AUDIO's two people: the host and the lit guest (else the first guest), both with their settings known.
+    private func pair() -> (String, String)? {
+        guard let h = order.first(where: { (people[$0]?["role"] as? String) == "admin" }) else { return nil }
+        let isGuest = { (id: String) in (self.people[id]?["role"] as? String) != "admin" }
+        guard let g = (isGuest(target) && people[target] != nil) ? target : order.first(where: isGuest) else { return nil }
+        return st(h).isEmpty || st(g).isEmpty ? nil : (h, g)
     }
 
     /// Shown at once; the person's own answer follows and wins (as on the remote page).
@@ -287,9 +306,16 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             p.fill()
             let knob = NSBezierPath(ovalIn: active ? R(37.5, 46, 14, 14) : R(20.5, 46, 14, 14))
             (active && on ? NSColor(red: 0x0B / 255.0, green: 0x0D / 255.0, blue: 0x10 / 255.0, alpha: 1) : NSColor(white: 0.7, alpha: 1)).setFill(); knob.fill()
-            let (a, b) = what == "ec" ? ("ECHO", "CANCEL") : ("NOISE", "REDUCTION")
             let c = !on ? dim : (active ? .white : NSColor(white: 0.7, alpha: 1))
-            text(a, 10.5, 22, c); text(b, b.count > 7 ? 8.5 : 10.5, 9, c)
+            text("ECHO +", 10.5, 22, c); text("NOISE", 10.5, 9, c)
+        case "swap":
+            // two arrows, the page's swap icon; who speaks under it
+            let a = NSBezierPath(); a.lineWidth = 3 * u; a.lineCapStyle = .round; a.lineJoinStyle = .round
+            a.move(to: NSPoint(x: 18 * u, y: 54 * u)); a.line(to: NSPoint(x: 54 * u, y: 54 * u)); a.line(to: NSPoint(x: 46 * u, y: 62 * u))
+            a.move(to: NSPoint(x: 54 * u, y: 38 * u)); a.line(to: NSPoint(x: 18 * u, y: 38 * u)); a.line(to: NSPoint(x: 26 * u, y: 30 * u))
+            amber.setStroke(); a.stroke()
+            text("SWAP", 10.5, 15, .white)
+            text(label, min(9, 80 / CGFloat(max(1, label.count))), 4, active ? amber : red, .semibold)
         default: break
         }
     }

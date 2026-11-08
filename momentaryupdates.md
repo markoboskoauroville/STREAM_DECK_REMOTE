@@ -62,3 +62,8 @@ Status: saved first (read as: a third profile CLASSROOM = the MPA remote page on
 
 "Please gang both buttons in controls of settings. Echo cancel and noise reduction are going together as a pair."
 Status: done: either key on the CLASSROOM profile sets both for that person (Mac v13).
+
+## 13 · 8.11.2026, SWAP AUDIO (MPA request 195)
+
+"Please make a button in in my stream deck and in my controls. To swap audio. So either one audio is working or the other because she's not having headphones and we cannot speak at the same time. So one or the other"
+Status: done: CLASSROOM row 2 = NAME · MIC · ECHO + NOISE (one key, the pair) · CAMERA · SWAP (who speaks under it); a press opens the closed microphone and closes the open one (host and the lit guest). Mac v14.
