@@ -26,6 +26,7 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
     private var people: [String: [String: Any]] = [:]     // id → card + "st" (its audio-state)
     private var order: [String] = []
     private var target = ""                                // whose layout row 1 changes
+    private var page = 0                                   // more than two people: rows 2-3 show two at a time
     private var task: URLSessionWebSocketTask?
     private var session: URLSession!
     private var retry = 0
@@ -140,15 +141,19 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             k.append(["kind": "cls", "what": "lay", "v": v, "label": name,
                       "active": !target.isEmpty && (ts["lay"] as? String) == v, "on": !target.isEmpty && !ts.isEmpty])
         }
+        let pages = max(1, (order.count + 1) / 2)
+        if page >= pages { page = 0 }
         for row in 0..<2 {
-            guard row < order.count, let p = people[order[row]] else {
+            let at = page * 2 + row
+            guard at < order.count, let p = people[order[at]] else {
                 k.append(["kind": "cls", "what": "nobody", "label": row == 0 ? "HOST" : "GUEST"])
                 for _ in 0..<4 { k.append(["kind": "empty"]) }
                 continue
             }
-            let id = order[row], s = st(id), has = !s.isEmpty
+            let id = order[at], s = st(id), has = !s.isEmpty
+            // more than two people: the lit name pressed again shows the next two (its hint says so)
             k.append(["kind": "cls", "what": "name", "label": shortName(p), "role": (p["role"] as? String) == "admin" ? "HOST" : "GUEST",
-                      "active": id == target, "id": id])
+                      "active": id == target, "id": id, "v": pages > 1 ? "\(at + 1)/\(order.count)" : ""])
             for w in ["mic", "ec", "ns", "cam"] {
                 k.append(["kind": "cls", "what": w, "id": id, "active": s[w] as? Bool ?? false, "on": has])
             }
@@ -171,7 +176,7 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
         if !problem.isEmpty { return problem }
         if !connected { return "Connecting to the classroom…" }
         if order.isEmpty { return "Nobody in the classroom yet" }
-        let n = order.compactMap { people[$0].map(shortName) }.joined(separator: " · ")
+        let n = order.count > 2 ? "\(order.count) people" : order.compactMap { people[$0].map(shortName) }.joined(separator: " · ")
         return "\(n) · layouts for \(people[target].map(shortName) ?? "—")"
     }
 
@@ -184,7 +189,9 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
             guard !target.isEmpty, let v = k[i]["v"] as? String else { return }
             setState(target, "lay", v)
         case "name":
-            target = k[i]["id"] as? String ?? target
+            let id = k[i]["id"] as? String ?? target
+            if id == target && order.count > 2 { page += 1; let n = page * 2 < order.count ? order[page * 2] : order[0]; if page * 2 >= order.count { page = 0 }; target = n }
+            else { target = id }
             onChange()
         case "mic", "ec", "ns", "cam":
             guard let id = k[i]["id"] as? String, !st(id).isEmpty else { return }
@@ -248,9 +255,11 @@ final class Classroom: NSObject, URLSessionWebSocketDelegate {
                 mpaGreen.setStroke()
                 let r = NSBezierPath(roundedRect: R(2, 2, 68, 68), xRadius: 8 * u, yRadius: 8 * u); r.lineWidth = 3 * u; r.stroke()
             }
-            text(label.uppercased(), label.count > 8 ? 10.5 : 13, 33, active ? .white : NSColor(white: 0.85, alpha: 1))
-            text(k["role"] as? String ?? "", 9, 19, active ? mpaGreen : dim, .semibold)
-            text(active ? "LAYOUT ▲" : "", 8, 6, mpaGreen, .semibold)
+            // never cut: the name's size from its length (MANTRESHWAR fits)
+            text(label.uppercased(), min(13, 88 / CGFloat(max(1, label.count))), 33, active ? .white : NSColor(white: 0.85, alpha: 1))
+            let n = k["v"] as? String ?? ""
+            text((k["role"] as? String ?? "") + (n.isEmpty ? "" : "  " + n), 9, 19, active ? mpaGreen : dim, .semibold)
+            text(active ? (n.isEmpty ? "LAYOUT ▲" : "LAYOUT ▲ · NEXT") : "", n.isEmpty ? 8 : 7, 6, mpaGreen, .semibold)
         case "nobody":
             text(label, 10, 33, NSColor(white: 0.35, alpha: 1))
             text("not here", 8.5, 20, NSColor(white: 0.35, alpha: 1), .regular)
